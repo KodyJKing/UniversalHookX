@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.asmlib": "asm-intel-x86-generic",
+        "*.rc": "plaintext",
+        "memory": "cpp"
+    }
+}
