@@ -3,7 +3,7 @@
   <CheatEntries>
     <CheatEntry>
       <ID>0</ID>
-      <Description>"Inject DLL"</Description>
+      <Description>"Inject DLL x64"</Description>
       <LastState/>
       <VariableType>Auto Assembler Script</VariableType>
       <AssemblerScript>[ENABLE]
@@ -18,6 +18,28 @@ tryInjectDll(memrec, "\\..\\UniversalHookX\\bin\\", "UniversalHookX Debug x64")
           <Action>Activate</Action>
           <Keys>
             <Key>33</Key>
+          </Keys>
+          <ID>0</ID>
+        </Hotkey>
+      </Hotkeys>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>1</ID>
+      <Description>"Inject DLL x86"</Description>
+      <LastState/>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+{$lua}
+if syntaxcheck then return end
+tryInjectDll(memrec, "\\..\\UniversalHookX\\bin\\", "UniversalHookX Debug Win32")
+{$asm}
+[DISABLE]
+</AssemblerScript>
+      <Hotkeys>
+        <Hotkey>
+          <Action>Activate</Action>
+          <Keys>
+            <Key>34</Key>
           </Keys>
           <ID>0</ID>
         </Hotkey>

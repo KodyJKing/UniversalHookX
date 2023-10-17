@@ -212,7 +212,7 @@
     <ClCompile Include="src\hooks\backend\opengl\hook_opengl.cpp" />
     <ClCompile Include="src\hooks\backend\vulkan\hook_vulkan.cpp" />
     <ClCompile Include="src\hooks\hooks.cpp" />
-    <ClCompile Include="src\hooks\hook_mouse.cpp" />
+    <ClCompile Include="src\hooks\input\hook_mouse.cpp" />
     <ClCompile Include="src\hooks\input\hook_dinput8.cpp" />
     <ClCompile Include="src\menu\menu.cpp" />
     <ClCompile Include="src\utils\utils.cpp" />
@@ -253,7 +253,7 @@
     <ClInclude Include="src\hooks\backend\opengl\hook_opengl.hpp" />
     <ClInclude Include="src\hooks\backend\vulkan\hook_vulkan.hpp" />
     <ClInclude Include="src\hooks\hooks.hpp" />
-    <ClInclude Include="src\hooks\hook_mouse.hpp" />
+    <ClInclude Include="src\hooks\input\hook_mouse.hpp" />
     <ClInclude Include="src\hooks\input\hook_dinput8.hpp" />
     <ClInclude Include="src\menu\menu.hpp" />
     <ClInclude Include="src\utils\utils.hpp" />

@@ -4,6 +4,10 @@
 #ifdef ENABLE_BACKEND_DI8
 
 #include "../../console/console.hpp"
+#include "../../menu/menu.hpp"
+#include "../../dependencies/minhook/MinHook.h"
+#include <memory>
+
 #include <dinput.h>
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
@@ -12,48 +16,75 @@ IDirectInput8* createDirectInput8( ) {
 	HINSTANCE hinst = GetModuleHandle(NULL);
     IDirectInput8* pDirectInput;
     auto hr = DirectInput8Create(
-			hinst, 
-			DIRECTINPUT_VERSION,
-			IID_IDirectInput8,
-			(void**)&pDirectInput,
-			NULL
+		hinst, 
+		DIRECTINPUT_VERSION,
+		IID_IDirectInput8,
+		(void**)&pDirectInput,
+		NULL
 	);
     if (FAILED(hr))
         return NULL;
 	return pDirectInput;
 }
 
-IDirectInputDevice8* createMouseDevice(IDirectInput8* dinput) {
-	IDirectInputDevice8* pMouseDevice;
-    auto hr = dinput->CreateDevice(GUID_SysMouse, &pMouseDevice, NULL);
+IDirectInputDevice8* createDevice(GUID guid, IDirectInput8* dinput) {
+	IDirectInputDevice8* pDevice;
+    auto hr = dinput->CreateDevice(guid, &pDevice, NULL);
     if (FAILED(hr))
         return NULL;
-    return pMouseDevice;
+    return pDevice;
 }
 
-namespace Dump {
-	void __IDirectInput8(IDirectInput8* dinput) {
-		// offset 0x18
-		printf("CreateDevice");
-		dinput->CreateDevice(GUID_SysMouse, NULL, NULL);
-	}
-	void __IDirectInputDevice8(IDirectInputDevice8* device) {
-		// offset 0x48
-		printf("GetDeviceState");
-		device->GetDeviceState(0, NULL);
-	}
-	void dump() {
-        LOG("__IDirectInput8: %llX\n", reinterpret_cast<unsigned long long>(Dump::__IDirectInput8));
-        LOG("__IDirectInputDevice8: %llX\n", reinterpret_cast<unsigned long long>(Dump::__IDirectInputDevice8));
-	}
+static std::add_pointer_t<HRESULT WINAPI(IDirectInputDevice8* device, DWORD cbData, LPVOID lpvData)> oGetDeviceState_mouse;
+HRESULT WINAPI hkGetDeviceState_mouse(IDirectInputDevice8* device, DWORD cbData, LPVOID lpvData) {
+	//LOG("[+] Hello from mouse hook!\n");
+    if (Menu::bShowMenu) {
+		return S_OK;
+    } else {
+		return oGetDeviceState_mouse(device, cbData, lpvData);
+    }
 }
 
-// Notes:
-// https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee417896(v=vs.85)
-// https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee416610(v=vs.85)
-// Look out for devices with dwDevType == DI8DEVTYPE_MOUSE
+static std::add_pointer_t<HRESULT WINAPI(IDirectInputDevice8* device, DWORD cbData, LPVOID lpvData)> oGetDeviceState_keyboard;
+HRESULT WINAPI hkGetDeviceState_keyboard(IDirectInputDevice8* device, DWORD cbData, LPVOID lpvData) {
+	LOG("[+] Hello from keyboard hook!\n");
+    if (Menu::bShowMenu) {
+		return S_OK;
+    } else {
+		return oGetDeviceState_keyboard(device, cbData, lpvData);
+    }
+}
+
+enum IDirectInputDevice8_Method {
+	GetDeviceState = 9
+};
 
 namespace DI8 {
+
+	void HookDevice(IDirectInputDevice8* device, size_t vtableIndex, LPVOID pDetour, LPVOID* ppOriginal) {
+
+		//LOG("[+] Hooking device: %llX\n", reinterpret_cast<UINT_PTR>(device));
+
+		void** vtable = *reinterpret_cast<void***>(device);
+
+		//LOG("[+] Device vtable: %llX\n", reinterpret_cast<UINT_PTR>(vtable));
+
+		void* functionToHook = vtable[vtableIndex];
+
+		LOG("[+] Original function: %llX\n", reinterpret_cast<UINT_PTR>(functionToHook));
+
+		static MH_STATUS hookStatus = MH_CreateHook(
+			reinterpret_cast<void**>(functionToHook), 
+			pDetour, ppOriginal
+		);
+
+		LOG("[+] Hook status: %llu\n", hookStatus);
+
+		hookStatus = MH_EnableHook(functionToHook);
+
+		LOG("[+] Hook status: %llu\n", hookStatus);
+
+	}
 
 	void Hook() {
 
@@ -61,19 +92,41 @@ namespace DI8 {
         if (dinput) {
             LOG("[+] Created DirectInput8.\n");
 
-            auto mouse = createMouseDevice(dinput);
+            auto mouse = createDevice(GUID_SysMouse, dinput);
             if (mouse) {
-				LOG("[+] Created mouse device.\n");
-
-				// Hook GetDeviceState
-
+				LOG("[+] Hooking mouse.\n");
+                HookDevice(
+					mouse, 
+					IDirectInputDevice8_Method::GetDeviceState, 
+					&hkGetDeviceState_mouse,
+					reinterpret_cast<void**>(&oGetDeviceState_mouse)
+				);
 				mouse->Release( );
             }
+
+#ifdef ENABLE_D8_KEYBOARD_HOOK
+			// We're not using this for now. MinHook is shitting the bed when using both these hooks.
+			// Maybe we should mimick the usage pattern in DX9 hook closer:
+			//   1. Pull function pointers out of the device.
+			//   2. Release the device. 
+			//   3. Create the hooks.
+			//   4. Enable the hooks.
+			auto keyboard = createDevice(GUID_SysKeyboard, dinput);
+            if (keyboard) {
+				LOG("[+] Hooking keyboard.\n");
+                HookDevice(
+					keyboard, 
+					IDirectInputDevice8_Method::GetDeviceState,
+					&hkGetDeviceState_keyboard,
+					reinterpret_cast<void**>(&oGetDeviceState_keyboard)
+				);
+				keyboard->Release( );
+            }
+#endif
 
 			dinput->Release( );
         }
 
-		Dump::dump( );
 	}
 
 	void Unhook() {

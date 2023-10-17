@@ -18,7 +18,7 @@
 
 #include "../dependencies/minhook/MinHook.h"
 
-#include "hook_mouse.hpp"
+#include "input/hook_mouse.hpp"
 #include "input/hook_dinput8.hpp"
 
 static HWND g_hWindow = NULL;
@@ -47,8 +47,16 @@ static DWORD WINAPI ReinitializeGraphicalHooks( LPVOID lpParam ) {
 
 static WNDPROC oWndProc;
 static LRESULT WINAPI WndProc( const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam ) {
+    Mouse::enableApis = true;
+
     if ( uMsg == WM_KEYDOWN ) {
-        if ( wParam == VK_INSERT ) {
+        if ( wParam == VK_DELETE ) {
+
+            static bool cursorToggle = true;
+            ShowCursor(cursorToggle);
+            cursorToggle = !cursorToggle;
+
+        } else if ( wParam == VK_INSERT ) {
             Menu::bShowMenu = !Menu::bShowMenu;
             return 0;
         } else if ( wParam == VK_HOME ) {
@@ -67,17 +75,44 @@ static LRESULT WINAPI WndProc( const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             CloseHandle( hHandle );
     }
 
+    bool callOriginal;
+    switch (uMsg) {
+        case WM_MOUSEMOVE:
+        case WM_MOUSEHOVER:
+        case WM_MOUSEWHEEL:
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP:
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP:
+            callOriginal = false;
+            break;
+        default:
+            callOriginal = true;
+            break;
+    }
+
     LRESULT ImGui_ImplWin32_WndProcHandler( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
     if ( Menu::bShowMenu ) {
+
+        auto hcursor = LoadCursor(NULL, IDC_ARROW);
+        SetCursor(hcursor);
         ShowCursor(true);
 
-        ImGui_ImplWin32_WndProcHandler( hWnd, uMsg, wParam, lParam );
+        auto result = ImGui_ImplWin32_WndProcHandler( hWnd, uMsg, wParam, lParam );
+        if (!callOriginal)
+            return result;
 
         // (Doesn't work for some games like 'Sid Meier's Civilization VI')
         // Window may not maximize from taskbar because 'H::bShowDemoWindow' is set to true by default. ('hooks.hpp')
         //
         //return ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam) == 0;
+    } else {
+        ShowCursor(false);
     }
+
+    Mouse::enableApis = !Menu::bShowMenu;
 
     return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
 }
