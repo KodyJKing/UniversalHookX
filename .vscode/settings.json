@@ -2,7 +2,9 @@
     "files.associations": {
         "*.asmlib": "asm-intel-x86-generic",
         "*.rc": "plaintext",
-        "memory": "cpp"
+        "memory": "cpp",
+        "mutex": "cpp",
+        "map": "cpp"
     },
     "Lua.diagnostics.disable": [
         "lowercase-global",
@@ -60,6 +62,7 @@
         "readBytes",
         "bpmDebugRegister",
         "bptWrite",
-        "writeBytes"
+        "writeBytes",
+        "shellExecute"
     ],
 }

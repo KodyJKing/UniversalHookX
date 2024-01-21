@@ -48,6 +48,10 @@ function tryInjectDll(memrec, relativePath, dllBaseName)
     disableMemrec(memrec)
 end
 
+function launch(exeDir, exeName, flags)
+    io.popen("cd " .. exeDir .. " && start " .. exeName .. " " .. flags)
+end
+
 function reopenProcess(memrec)
     openProcess(getOpenedProcessID())
     disableMemrec(memrec)

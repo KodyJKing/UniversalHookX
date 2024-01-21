@@ -75,34 +75,33 @@ static LRESULT WINAPI WndProc( const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             CloseHandle( hHandle );
     }
 
-    bool callOriginal;
-    switch (uMsg) {
-        case WM_MOUSEMOVE:
-        case WM_MOUSEHOVER:
-        case WM_MOUSEWHEEL:
-        case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP:
-        case WM_MBUTTONDOWN:
-        case WM_MBUTTONUP:
-        case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP:
-            callOriginal = false;
-            break;
-        default:
-            callOriginal = true;
-            break;
-    }
+    bool callOriginal = true;
+
+    LRESULT result = NULL;
 
     LRESULT ImGui_ImplWin32_WndProcHandler( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
     if ( Menu::bShowMenu ) {
 
-        auto hcursor = LoadCursor(NULL, IDC_ARROW);
-        SetCursor(hcursor);
+            switch (uMsg) {
+                case WM_MOUSEMOVE:
+                case WM_MOUSEHOVER:
+                case WM_MOUSEWHEEL:
+                case WM_LBUTTONDOWN:
+                case WM_LBUTTONUP:
+                case WM_MBUTTONDOWN:
+                case WM_MBUTTONUP:
+                case WM_RBUTTONDOWN:
+                case WM_RBUTTONUP:
+                    callOriginal = false;
+                    break;
+                default:
+                    break;
+            }
+
+        SetCursor(LoadCursor(NULL, IDC_ARROW));
         ShowCursor(true);
 
-        auto result = ImGui_ImplWin32_WndProcHandler( hWnd, uMsg, wParam, lParam );
-        if (!callOriginal)
-            return result;
+        result = ImGui_ImplWin32_WndProcHandler( hWnd, uMsg, wParam, lParam );
 
         // (Doesn't work for some games like 'Sid Meier's Civilization VI')
         // Window may not maximize from taskbar because 'H::bShowDemoWindow' is set to true by default. ('hooks.hpp')
@@ -112,9 +111,12 @@ static LRESULT WINAPI WndProc( const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         ShowCursor(false);
     }
 
-    Mouse::enableApis = !Menu::bShowMenu;
+    Mouse::enableApis = false;
 
-    return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
+    if (callOriginal)
+        result = CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
+
+    return result;
 }
 
 namespace Hooks {

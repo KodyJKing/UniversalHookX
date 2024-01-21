@@ -1,0 +1,1 @@
+nodemon -e c,h,cpp,hpp --exec "MSBuild ./UniversalHookX.sln"
