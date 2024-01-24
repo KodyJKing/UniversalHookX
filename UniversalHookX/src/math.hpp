@@ -2,15 +2,22 @@ namespace Math {
 
     class Vector4 {
     public:
-        float x;
-        float y;
-        float z;
-        float w;
+        union {
+            float v[4];
+            struct {
+                float x;
+                float y;
+                float z;
+                float w;
+            } c;
+        };
+        
         Vector4& operator+=(const Vector4& rhs);
         Vector4& operator-=(const Vector4& rhs);
         Vector4 operator+(const Vector4& rhs);
         Vector4 operator-(const Vector4& rhs);
-        Vector4 scale(float scalar);
+        Vector4 operator*(const float scalar);
+        Vector4 operator/(const float scalar);
         float dot(const Vector4& rhs);
         float length();
     };
@@ -28,8 +35,10 @@ namespace Math {
                 Vector4 w;
             } columns;
         };
-        Matrix4 multiply(const Matrix4& rhs);
+        Matrix4 operator*(const Matrix4& rhs);
+        Vector4 operator*(const Vector4& rhs);
         Matrix4 transpose();
+        Matrix4 inverse(bool& success);
         void print();
     };
 
