@@ -1,6 +1,7 @@
 #pragma once
 
 typedef unsigned int uint32_t;
+typedef unsigned long long uint_ptr;
 
 enum ViewStorage {
     VSPointer = 0,
@@ -21,8 +22,9 @@ enum MatrixOrder {
 enum MatrixType {
     MTCamera = 0,
     MTView = 1,
+    MTViewProjection = 2,
 };
 
-extern "C" __declspec(dllexport) void setCameraMatrix(void* pointer, MatrixOrder order);
+extern "C" __declspec(dllexport) void __stdcall setCameraMatrix(void* pointer, MatrixOrder order);
 
-extern "C" __declspec(dllexport) void updateObject(uint32_t id, float x, float y, float z, uint32_t timeout);
+extern "C" __declspec(dllexport) void __stdcall updateObject(uint_ptr id, float* position, uint32_t timeout);

@@ -39,6 +39,7 @@ namespace Math {
         Vector4 operator*(const Vector4& rhs);
         Matrix4 transpose();
         Matrix4 inverse(bool& success);
+        static Matrix4 perspective(float fov, float aspect, float near, float far);
         void print();
     };
 

@@ -44,6 +44,6 @@ namespace Menu {
         if (!bShowMenu)
             return;
 
-        ig::ShowDemoWindow();
+        // ig::ShowDemoWindow();
     }
 } // namespace Menu

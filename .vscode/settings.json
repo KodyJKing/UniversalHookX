@@ -4,7 +4,9 @@
         "*.rc": "plaintext",
         "memory": "cpp",
         "mutex": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "xtree": "cpp",
+        "utility": "cpp"
     },
     "Lua.diagnostics.disable": [
         "lowercase-global",

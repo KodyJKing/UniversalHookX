@@ -161,4 +161,16 @@ namespace Math {
             printf("%.4f %.4f %.4f %.4f\n", this->m[0][r], this->m[1][r], this->m[2][r], this->m[3][r]);
     }
 
+    // Static Matrix4 Functions
+    Matrix4 Matrix4::perspective(float fov, float aspect, float near, float far) {
+        Matrix4 result{0};
+        float tanHalfFov = tanf(fov / 2.0f);
+        result.m[0][0] = 1.0f / (aspect * tanHalfFov);
+        result.m[1][1] = 1.0f / tanHalfFov;
+        result.m[2][2] = -(far + near) / (far - near);
+        result.m[2][3] = -1.0f;
+        result.m[3][2] = -(2.0f * far * near) / (far - near);
+        return result;
+    }
+
 }
