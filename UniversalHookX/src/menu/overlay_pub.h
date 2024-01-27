@@ -28,3 +28,7 @@ enum MatrixType {
 extern "C" __declspec(dllexport) void __stdcall setCameraMatrix(void* pointer, MatrixOrder order);
 
 extern "C" __declspec(dllexport) void __stdcall updateObject(uint_ptr id, float* position, uint32_t timeout);
+
+extern "C" __declspec(dllexport) void __stdcall setCameraForwardPtr(void* pointer, unsigned int stride, int scale);
+
+extern "C" __declspec(dllexport) void __stdcall setCameraUpPtr(void* pointer, unsigned int stride, int scale);

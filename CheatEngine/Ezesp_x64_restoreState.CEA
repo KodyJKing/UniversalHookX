@@ -1,0 +1,25 @@
+// Restore volatile xmm registers.
+movdqa xmm0, [rsp]
+movdqa xmm1, [rsp+10]
+movdqa xmm2, [rsp+20]
+movdqa xmm3, [rsp+30]
+movdqa xmm4, [rsp+40]
+movdqa xmm5, [rsp+50]
+add rsp, 60
+
+// Restore stack pointer.
+mov rsp, rbx
+
+// Restore volatile registers
+pop r11
+pop r10
+pop r9
+pop r8
+pop rdx
+pop rcx
+pop rax
+
+// Restore rflags
+popfq
+
+pop rbp

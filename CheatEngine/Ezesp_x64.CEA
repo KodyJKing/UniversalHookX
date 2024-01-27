@@ -1,0 +1,67 @@
+// setCameraMatrix(void* pointer, MatrixOrder order)
+//     - Arguments are pushed onto the stack in reverse order. 
+//     - Callee cleans up the stack.
+label(_setCameraMatrix)
+_setCameraMatrix:
+    push rbp
+    lea rbp, [rsp+08]
+    
+    // Save rflags
+    pushfq
+
+    // Save volatile registers.
+    push rax
+    push rcx
+    push rdx
+    push r8
+    push r9
+    push r10
+    push r11
+
+    // Align stack to 16 bytes
+    mov rbx, rsp
+    and rsp, 0xfffffffffffffff0
+
+    // Save volatile xmm registers.
+    sub rsp, 60
+    movdqa [rsp], xmm0
+    movdqa [rsp+10], xmm1
+    movdqa [rsp+20], xmm2
+    movdqa [rsp+30], xmm3
+    movdqa [rsp+40], xmm4
+    movdqa [rsp+50], xmm5
+
+    // Call using Windows x64 calling convention
+    sub rsp, 28
+    mov rcx, [rbp+0x08]
+    mov rdx, [rbp+0x10]
+    call setCameraMatrix
+    add rsp, 28
+
+    // Restore volatile xmm registers.
+    movdqa xmm0, [rsp]
+    movdqa xmm1, [rsp+10]
+    movdqa xmm2, [rsp+20]
+    movdqa xmm3, [rsp+30]
+    movdqa xmm4, [rsp+40]
+    movdqa xmm5, [rsp+50]
+    add rsp, 60
+
+    // Restore stack pointer.
+    mov rsp, rbx
+
+    // Restore volatile registers
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rdx
+    pop rcx
+    pop rax
+
+    // Restore rflags
+    popfq
+
+    pop rbp
+
+    ret 0x10

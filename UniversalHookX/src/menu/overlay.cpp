@@ -8,6 +8,8 @@
 #include "../dependencies/imgui/imgui.h"
 #include "../dependencies/imgui/imgui_impl_win32.h"
 
+#include "../utils/utils.hpp"
+
 #include <Windows.h>
 
 #include <mutex>
@@ -35,13 +37,19 @@ struct View {
     }
 
     Matrix4 getMatrix(bool& success, float aspect) {
-        Matrix4 result;
+        Matrix4 result{0};
         success = true;
 
-        if (storage == ViewStorage::VSPointer)
-            result = pointer->matrix;
-        else
+        if (storage == ViewStorage::VSPointer) {
+            //  result = pointer->matrix;
+             success = Utils::safeDeref(&pointer->matrix, result);
+             if (!success) {
+                 LOG("Failed to read matrix from pointer\n");
+                 return result;
+             }
+        } else {
             result = data.matrix;
+        }
             
         if (order == MatrixOrder::VTRowMajor)
             result = result.transpose();
@@ -89,11 +97,17 @@ struct Object {
     Vector4 screenPosition;
 };
 
+struct UISettings {
+    bool alwaysShowIds = false;
+    bool hideUnselected = false;
+};
+
 ///////////////////////
 
 std::mutex apiMutex;
 View view;
 std::map<uint_ptr, Object> objects;
+UISettings uiSettings;
 
 void clearStaleObjects() {
     uint32_t now = GetTickCount();
@@ -148,16 +162,36 @@ void drawTextOutlined(ImDrawList* drawList, ImVec2 pos, ImU32 color, const char*
 
 namespace Overlay {
 
+    #define COL_RED IM_COL32(255, 0, 0, 255)
+    #define COL_GREEN IM_COL32(0, 255, 0, 255)
+    #define COL_BLUE IM_COL32(0, 0, 255, 255)
+    #define COL_WHITE IM_COL32(255, 255, 255, 255)
+    #define COL_BLACK IM_COL32(0, 0, 0, 255)
+    #define COL_TRANSPARENT IM_COL32(0, 0, 0, 0)
+    #define COL_YELLOW IM_COL32(255, 255, 0, 255)
+    //
+    #define COL_NEUTRAL IM_COL32(0, 255, 0, 128)
+    #define COL_HIGHLIGHT COL_GREEN
+
     void Draw() {
         const std::lock_guard<std::mutex> lock(apiMutex);
 
         ImVec2 winSize = ImGui::GetWindowSize();
+        auto drawList = ImGui::GetWindowDrawList();
 
         if (Menu::bShowMenu) {
+            // Transparent background
+            drawList->AddRectFilled(ImVec2(0, 0), winSize, IM_COL32(0, 0, 0, 64));
+
+            // Fov slider
             float sliderWidth = 400.0f;
             ImGui::SetNextItemWidth(sliderWidth);
             ImGui::SetCursorPos(ImVec2((winSize.x - sliderWidth) / 2, 0.0f));
             ImGui::SliderFloat("Fov", &view.fov, 0.1f, 3.14159265358979323846f);
+
+            ImGui::SetCursorPos(ImVec2(10.0f, 20.0f));
+            ImGui::Checkbox("Always show IDs", &uiSettings.alwaysShowIds);
+            ImGui::Checkbox("Hide unselected", &uiSettings.hideUnselected);
         }
 
         float aspect = winSize.x / winSize.y;
@@ -165,7 +199,6 @@ namespace Overlay {
         bool getMatSuccess = false;
         Matrix4 mat = view.getMatrix(getMatSuccess, aspect);
         if (!getMatSuccess) {
-            // Make text red
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
             ImGui::Text("Failed to get matrix");
             ImGui::PopStyleColor();
@@ -178,7 +211,6 @@ namespace Overlay {
 
         clearStaleObjects();
 
-        // Get mouse pos
         auto mousePos = ImGui::GetMousePos();
         auto targetPos = Menu::bShowMenu ? mousePos : ImVec2(winSize.x / 2, winSize.y / 2);
 
@@ -204,24 +236,29 @@ namespace Overlay {
             }
         }
 
-        auto drawList = ImGui::GetWindowDrawList();
+        drawList->AddCircleFilled(targetPos, 3.0f, COL_HIGHLIGHT);
+
         for (auto& object : objects) {
+            bool selected = object.second.id == nearestId;
+            if (uiSettings.hideUnselected && !selected)
+                continue;
+
             Vector4 position = object.second.screenPosition;
 
             if (position.c.z < 0)
                 continue;
 
-            bool selected = object.second.id == nearestId;
-            auto color = selected ? IM_COL32(0, 255, 0, 255) : IM_COL32(255, 0, 0, 255);
-            auto textColor = selected ? IM_COL32(0, 255, 0, 255) : IM_COL32(255, 255, 255, 255);
+            auto color = selected ? COL_HIGHLIGHT : COL_NEUTRAL;
+            auto textColor = selected ? COL_HIGHLIGHT : COL_WHITE;
             auto radius = selected ? 7.0f : 5.0f;
 
             ImVec2 screenPos = ImVec2(position.c.x, position.c.y);
             drawList->AddCircleFilled(screenPos, radius, color);
-            ImVec2 textPos = ImVec2(screenPos.x, screenPos.y + 10);
 
             char displayText[255];
-            snprintf(displayText, sizeof(displayText), "%llX", (unsigned long long)object.second.id);
+            bool textVisible = selected || uiSettings.alwaysShowIds;
+            if (textVisible)
+                snprintf(displayText, sizeof(displayText), "%llX", (unsigned long long)object.second.id);
 
             if (selected) {
                 drawList->AddLine(targetPos, screenPos, color, 2.0f);
@@ -231,11 +268,17 @@ namespace Overlay {
                     ImGui::SetClipboardText(displayText);
             }
 
-            // Center text
-            ImVec2 textSize = ImGui::CalcTextSize(displayText);
-            textPos.x -= textSize.x / 2;
-            drawTextOutlined(drawList, textPos, textColor, displayText);
-            // drawList->AddText(textPos, textColor, buff);
+            if (textVisible) {
+                drawTextOutlined(
+                    drawList, 
+                    ImVec2(
+                        screenPos.x - ImGui::CalcTextSize(displayText).x / 2,
+                        screenPos.y + 10
+                    ),
+                    textColor, displayText
+                );
+            }
+
         }
     }
 

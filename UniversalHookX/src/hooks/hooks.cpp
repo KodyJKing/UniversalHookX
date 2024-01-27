@@ -45,26 +45,43 @@ static DWORD WINAPI ReinitializeGraphicalHooks( LPVOID lpParam ) {
     return 0;
 }
 
+#define TILDE_KEY VK_OEM_3
+//
+#define KEY_TOGGLE_MENU TILDE_KEY // VK_INSERT
+#define KEY_REINITIALIZE_HOOKS VK_HOME
+#define KEY_UNLOAD_DLL VK_END
+#define KEY_HIDE_MOUSE VK_DELETE
+
+void forceHideCursor() {
+    while (ShowCursor(false) >= 0);
+}
+void forceShowCursor() {
+    while (ShowCursor(true) < 0);
+}
+
 static WNDPROC oWndProc;
 static LRESULT WINAPI WndProc( const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam ) {
     Mouse::enableApis = true;
 
     if ( uMsg == WM_KEYDOWN ) {
-        if ( wParam == VK_DELETE ) {
-
-            static bool cursorToggle = true;
-            ShowCursor(cursorToggle);
-            cursorToggle = !cursorToggle;
-
-        } else if ( wParam == VK_INSERT ) {
+        if ( wParam == KEY_HIDE_MOUSE ) {
+            bool ctrlKey = GetAsyncKeyState( VK_CONTROL );
+            if ( ctrlKey ) {
+                LOG( "[+] Showing mouse!\n" );
+                ShowCursor(true);
+            } else {
+                LOG( "[+] Hidding mouse!\n" );
+                ShowCursor(false);
+            }
+        } else if ( wParam == KEY_TOGGLE_MENU ) {
             Menu::bShowMenu = !Menu::bShowMenu;
             return 0;
-        } else if ( wParam == VK_HOME ) {
+        } else if ( wParam == KEY_REINITIALIZE_HOOKS ) {
             HANDLE hHandle = CreateThread( NULL, 0, ReinitializeGraphicalHooks, NULL, 0, NULL );
             if ( hHandle != NULL )
                 CloseHandle( hHandle );
             return 0;
-        } else if ( wParam == VK_END ) {
+        } else if ( wParam == KEY_UNLOAD_DLL ) {
             H::bShuttingDown = true;
             U::UnloadDLL();
             return 0;
@@ -99,7 +116,8 @@ static LRESULT WINAPI WndProc( const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             }
 
         SetCursor(LoadCursor(NULL, IDC_ARROW));
-        ShowCursor(true);
+        // ShowCursor(true);
+        forceShowCursor();
 
         result = ImGui_ImplWin32_WndProcHandler( hWnd, uMsg, wParam, lParam );
 
@@ -108,7 +126,8 @@ static LRESULT WINAPI WndProc( const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         //
         //return ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam) == 0;
     } else {
-        ShowCursor(false);
+        // ShowCursor(false);
+        forceHideCursor();
     }
 
     Mouse::enableApis = false;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Windows.h>
+
 enum RenderingBackend_t {
 	NONE = 0,
 
@@ -23,6 +25,21 @@ namespace Utils {
 	HMODULE GetCurrentImageBase( );
 
 	int GetCorrectDXGIFormat(int eCurrentFormat);
+
+	// Safe dereference
+	template <typename T>
+	BOOL safeDeref(T* ptr, T& result) {
+		if (!ptr)
+			return false;
+		DWORD pid = GetCurrentProcessId();
+		HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+		if (!hProcess)
+			return false;
+		BOOL success = ReadProcessMemory(hProcess, ptr, &result, sizeof(T), nullptr);
+		CloseHandle(hProcess);
+		return success;
+	}
+
 }
 
 namespace U = Utils;
