@@ -189,10 +189,6 @@ code:
     lea rbx, [rcx+F0]
     mov [camMatrix], rbx
 
-    push 0
-    push rbx
-    call _setCameraMatrix
-
     add rbx, 10
 
     push 1

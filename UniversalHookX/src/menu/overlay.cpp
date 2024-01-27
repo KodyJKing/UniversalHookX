@@ -17,10 +17,6 @@
 
 using namespace Math;
 
-union ViewValue {
-    Matrix4 matrix;
-};
-
 struct VecPointer {
     void* pointer;
     unsigned int stride;
@@ -43,20 +39,22 @@ struct VecPointer {
 };
 
 struct View {
-    ViewType type = ViewType::VTMatrix;
-    MatrixOrder order = MatrixOrder::VTColumnMajor;
-    MatrixType matrixType = MatrixType::MTCamera;
-
-    ViewValue data;
-    ViewValue* pointer = nullptr;
-
     VecPointer position;
     VecPointer forward;
     VecPointer up;
 
+    float* fovPtr = nullptr; 
     float fov = 1.223f;
 
     float getFov() {
+        if (fovPtr != nullptr) {
+            float result;
+            if ( Utils::safeDeref(fovPtr, result)) {
+                return result;
+            } else {
+                LOG("Failed to read fov from pointer\n");
+            }
+        }
         return fov;
     }
 
@@ -69,7 +67,7 @@ struct View {
         Vector4 positionVec{0};
 
         if (!forward.getVector(forwardVec) || !up.getVector(upVec) || !position.getVector(positionVec)) {
-            LOG("Failed to read vectors\n");
+            LOG("Failed to read camera vectors\n");
             success = false;
             return result;
         }
@@ -126,17 +124,6 @@ void clearStaleObjects() {
     }
 }
 
-extern "C" __declspec(dllexport) void __stdcall setCameraMatrix(void* pointer, MatrixOrder order) {
-    const std::lock_guard<std::mutex> lock(apiMutex);
-
-    // LOG("Args: %p, %d\n", pointer, order);
-    
-    view.type = ViewType::VTMatrix;
-    view.order = order;
-    view.matrixType = MatrixType::MTCamera;
-    view.pointer = (ViewValue*)pointer;
-}
-
 extern "C" __declspec(dllexport) void __stdcall updateObject(uint_ptr id, float* position, uint32_t timeout) {
     const std::lock_guard<std::mutex> lock(apiMutex);
     
@@ -152,6 +139,12 @@ extern "C" __declspec(dllexport) void __stdcall updateObject(uint_ptr id, float*
 
     object.timeout = timeout + GetTickCount();
     objects[id] = object;
+}
+
+extern "C" __declspec(dllexport) void __stdcall setFovPtr(float* pointer) {
+    const std::lock_guard<std::mutex> lock(apiMutex);
+    // LOG("Args: %p\n", (void*)pointer);
+    view.fovPtr = pointer;
 }
 
 extern "C" __declspec(dllexport) void __stdcall setCameraPosPtr(void* pointer, unsigned int stride, int scale) {
@@ -210,10 +203,12 @@ namespace Overlay {
             drawList->AddRectFilled(ImVec2(0, 0), winSize, IM_COL32(0, 0, 0, 64));
 
             // Fov slider
-            float sliderWidth = 400.0f;
-            ImGui::SetNextItemWidth(sliderWidth);
-            ImGui::SetCursorPos(ImVec2((winSize.x - sliderWidth) / 2, 0.0f));
-            ImGui::SliderFloat("Fov", &view.fov, 0.1f, 3.14159265358979323846f);
+            if (view.fovPtr == nullptr) {
+                float sliderWidth = 400.0f;
+                ImGui::SetNextItemWidth(sliderWidth);
+                ImGui::SetCursorPos(ImVec2((winSize.x - sliderWidth) / 2, 0.0f));
+                ImGui::SliderFloat("Fov", &view.fov, 0.1f, 3.14159265358979323846f);
+            }
 
             ImGui::SetCursorPos(ImVec2(10.0f, 20.0f));
             ImGui::Checkbox("Always show IDs", &uiSettings.alwaysShowIds);

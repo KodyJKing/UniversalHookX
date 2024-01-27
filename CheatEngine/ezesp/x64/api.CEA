@@ -2,20 +2,6 @@
 //     - Arguments are pushed onto the stack in reverse order.
 //     - Callee cleans up the stack.
 
-// setCameraMatrix(void* pointer, MatrixOrder order)
-label(_setCameraMatrix)
-_setCameraMatrix:
-    include(ezesp/x64/saveState)
-
-    sub rsp, 28
-    mov rcx, [rbp+0x08]
-    mov rdx, [rbp+0x10]
-    call setCameraMatrix
-    add rsp, 28
-
-    include(ezesp/x64/restoreState)
-    ret 0x10
-
 // updateObject(uint_ptr id, float* position, uint32_t timeout)
 label(_updateObject)
 _updateObject:
@@ -30,6 +16,19 @@ _updateObject:
 
     include(ezesp/x64/restoreState)
     ret 0x18
+
+// setFovPtr(float* pointer)
+label(_setFovPtr)
+_setFovPtr:
+    include(ezesp/x64/saveState)
+
+    sub rsp, 20
+    mov rcx, [rbp+0x08]
+    call setFovPtr
+    add rsp, 20
+
+    include(ezesp/x64/restoreState)
+    ret 0x08
 
 // setCameraPosPtr(void* pointer, unsigned int stride, int scale)
 label(_setCameraPosPtr)
