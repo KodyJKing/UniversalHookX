@@ -166,6 +166,7 @@ namespace Math {
     }
 
     // Leverages the fact that the inverse of an orthogonal matrix is its transpose.
+    // See: https://www.3dgep.com/understanding-the-view-matrix/#look-at-camera
     Matrix4 Matrix4::orthoInverse(bool& success) {
         Matrix4 result{0};
 

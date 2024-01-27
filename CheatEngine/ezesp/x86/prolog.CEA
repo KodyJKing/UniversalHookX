@@ -1,0 +1,24 @@
+// Save esp to ebp
+push ebp
+lea ebp, [esp+04]
+
+// Save registers and flags
+pushad
+pushfd
+
+// 16-byte align esp
+mov eax, esp
+and esp, 0xFFFFFFF0
+push eax
+
+// // Save xmm0-7
+// // Todo: Align stack and use movdqa instead.
+sub esp, 80
+movdqu [esp], xmm0
+movdqu [esp+10], xmm1
+movdqu [esp+20], xmm2
+movdqu [esp+30], xmm3
+movdqu [esp+40], xmm4
+movdqu [esp+50], xmm5
+movdqu [esp+60], xmm6
+movdqu [esp+70], xmm7

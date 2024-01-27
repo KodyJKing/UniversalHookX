@@ -1,0 +1,21 @@
+// // Restore xmm0-7
+movdqu xmm0, [esp]
+movdqu xmm1, [esp+10]
+movdqu xmm2, [esp+20]
+movdqu xmm3, [esp+30]
+movdqu xmm4, [esp+40]
+movdqu xmm5, [esp+50]
+movdqu xmm6, [esp+60]
+movdqu xmm7, [esp+70]
+add esp, 80
+
+// Restore esp
+pop eax
+mov esp, eax
+
+// Restore registers and flags
+popfd
+popad
+
+// Restore ebp
+pop ebp

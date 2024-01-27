@@ -15,7 +15,7 @@ push r10
 push r11
 
 // Align stack to 16 bytes
-push rbx
+push rbx // It might be better to use rax and move the push after the alignment. This way, we don't depend on rbx being preserved.
 mov rbx, rsp
 and rsp, 0xfffffffffffffff0
 

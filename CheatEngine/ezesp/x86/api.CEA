@@ -1,0 +1,60 @@
+// Wrappers for APIs from Ezesp.dll. Ensures that registers are preserved across calls.
+//     - Arguments are pushed onto the stack in reverse order.
+//     - Callee cleans up the stack.
+
+// setFovPtr(float* pointer)
+label(_setFovPtr)
+_setFovPtr:
+
+    // Save esp to ebp
+    push ebp
+    lea ebp, [esp+04]
+
+    // Save registers and flags
+    pushad
+    pushfd
+
+    // 16-byte align esp
+    mov eax, esp
+    and esp, 0xFFFFFFF0
+    push eax
+
+    // // Save xmm0-7
+    // // Todo: Align stack and use movdqa instead.
+    sub esp, 80
+    movdqu [esp], xmm0
+    movdqu [esp+10], xmm1
+    movdqu [esp+20], xmm2
+    movdqu [esp+30], xmm3
+    movdqu [esp+40], xmm4
+    movdqu [esp+50], xmm5
+    movdqu [esp+60], xmm6
+    movdqu [esp+70], xmm7
+
+    // Call function
+    push [ebp+04]
+    call setFovPtr
+
+    // // Restore xmm0-7
+    movdqu xmm0, [esp]
+    movdqu xmm1, [esp+10]
+    movdqu xmm2, [esp+20]
+    movdqu xmm3, [esp+30]
+    movdqu xmm4, [esp+40]
+    movdqu xmm5, [esp+50]
+    movdqu xmm6, [esp+60]
+    movdqu xmm7, [esp+70]
+    add esp, 80
+
+    // Restore esp
+    pop eax
+    mov esp, eax
+
+    // Restore registers and flags
+    popfd
+    popad
+
+    // Restore ebp
+    pop ebp
+
+    ret 04
