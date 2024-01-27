@@ -182,7 +182,7 @@ label(return)
 
 newmem:
 
-include(Ezesp_x64)
+include(ezesp/x64/api)
 
 code:
   push rbx
@@ -193,74 +193,26 @@ code:
     push rbx
     call _setCameraMatrix
 
-    /*
-    // Push
-    pushfq
-    push rax
+    add rbx, 10
+
+    push 1
+    push 1
     push rbx
-    push rcx
-    push rdx
-    push rsi
-    push rdi
-    push rbp
-    push rsp
-    push r8
-    push r9
-    push r10
-    push r11
-    push r12
-    push r13
-    push r14
-    push r15
+    call _setCameraUpPtr
 
-    // Push xmm0-xmm7 onto stack
-    sub rsp, 80
-    movdqa [rsp], xmm0
-    movdqa [rsp+10], xmm1
-    movdqa [rsp+20], xmm2
-    movdqa [rsp+30], xmm3
-    movdqa [rsp+40], xmm4
-    movdqa [rsp+50], xmm5
-    movdqa [rsp+60], xmm6
-    movdqa [rsp+70], xmm7
+    add rbx, 10
 
-    // Call the function
-    sub rsp, 20
-    mov rcx, rbx
-    mov rdx, 0
-    call setCameraMatrix
-    add rsp, 20
+    push 1
+    push 1
+    push rbx
+    call _setCameraForwardPtr
 
-    // Pop xmm0-xmm7 from stack
-    movdqa xmm0, [rsp]
-    movdqa xmm1, [rsp+10]
-    movdqa xmm2, [rsp+20]
-    movdqa xmm3, [rsp+30]
-    movdqa xmm4, [rsp+40]
-    movdqa xmm5, [rsp+50]
-    movdqa xmm6, [rsp+60]
-    movdqa xmm7, [rsp+70]
-    add rsp, 80
+    add rbx, 10
 
-    // Restore
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop r11
-    pop r10
-    pop r9
-    pop r8
-    pop rsp
-    pop rbp
-    pop rdi
-    pop rsi
-    pop rdx
-    pop rcx
-    pop rbx
-    pop rax
-    popfq
-    */
+    push 1
+    push 1
+    push rbx
+    call _setCameraPosPtr
 
   pop rbx
   movaps [rcx+000000F0],xmm3
@@ -430,92 +382,30 @@ DarkSoulsIII.exe+E00B0D: E8 BE 88 F0 FF        - call DarkSoulsIII.exe+D093D0
 [ENABLE]
 
 aobscanmodule(readCharX,DarkSoulsIII.exe,66 0F 7F B3 80 00 00 00 0F) // should be unique
-alloc(newmem,$1000,readCharX)
+alloc(newmem,1000,readCharX)
 
 label(code)
 label(return)
 
 newmem:
 
+include(ezesp/x64/api)
+
 code:
   movdqa [rbx+00000080],xmm6
 
-  // Push
-  pushfq
   push rax
-  push rbx
-  push rcx
-  push rdx
-  push rsi
-  push rdi
-  push rbp
-  push rsp
-  push r8
-  push r9
-  push r10
-  push r11
-  push r12
-  push r13
-  push r14
-  push r15
-
-
-  // Push xmm0-xmm7 onto stack
-  sub rsp, 80
-  movdqu [rsp], xmm0
-  movdqu [rsp+10], xmm1
-  movdqu [rsp+20], xmm2
-  movdqu [rsp+30], xmm3
-  movdqu [rsp+40], xmm4
-  movdqu [rsp+50], xmm5
-  movdqu [rsp+60], xmm6
-  movdqu [rsp+70], xmm7
-
-
-  // Call the function
-  sub rsp, 28
-  mov rcx, rbx      // use pointer as id
-  lea rdx, [rbx+80] // position pointer
-  mov r8,  #1000    // 1 second timeout
-  call updateObject
-  add rsp, 28
-
-
-  // Pop xmm0-xmm7 from stack
-  movdqu xmm0, [rsp]
-  movdqu xmm1, [rsp+10]
-  movdqu xmm2, [rsp+20]
-  movdqu xmm3, [rsp+30]
-  movdqu xmm4, [rsp+40]
-  movdqu xmm5, [rsp+50]
-  movdqu xmm6, [rsp+60]
-  movdqu xmm7, [rsp+70]
-  add rsp, 80
-
-
-  // Restore
-  pop r15
-  pop r14
-  pop r13
-  pop r12
-  pop r11
-  pop r10
-  pop r9
-  pop r8
-  pop rsp
-  pop rbp
-  pop rdi
-  pop rsi
-  pop rdx
-  pop rcx
-  pop rbx
+    push #1000       // 1 second timeout
+    lea rax,[rbx+80] // position pointer
+    push rax
+    push rbx         // use pointer as id
+    call _updateObject
   pop rax
-  popfq
 
   jmp return
 
 readCharX:
-  jmp newmem
+  jmp code
   nop 3
 return:
 registersymbol(readCharX)

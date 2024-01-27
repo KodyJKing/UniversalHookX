@@ -1,10 +1,11 @@
+// Save rsp to rbp
 push rbp
 lea rbp, [rsp+08]
 
 // Save rflags
 pushfq
 
-// Save volatile registers. See [0].
+// Save volatile registers.
 push rax
 push rcx
 push rdx
@@ -14,10 +15,11 @@ push r10
 push r11
 
 // Align stack to 16 bytes
+push rbx
 mov rbx, rsp
 and rsp, 0xfffffffffffffff0
 
-// Save volatile xmm registers. See [0].
+// Save volatile xmm registers.
 sub rsp, 60
 movdqa [rsp], xmm0
 movdqa [rsp+10], xmm1

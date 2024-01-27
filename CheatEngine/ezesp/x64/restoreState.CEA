@@ -9,6 +9,7 @@ add rsp, 60
 
 // Restore stack pointer.
 mov rsp, rbx
+pop rbx
 
 // Restore volatile registers
 pop r11
@@ -22,4 +23,5 @@ pop rax
 // Restore rflags
 popfq
 
+// Restore rbp
 pop rbp

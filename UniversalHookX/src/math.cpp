@@ -52,6 +52,14 @@ namespace Math {
     float Vector4::length() {
         return sqrtf(this->dot(*this));
     }
+    Vector4 Vector4::cross(const Vector4& rhs) {
+        Vector4 result;
+        result.c.x = this->c.y * rhs.c.z - this->c.z * rhs.c.y;
+        result.c.y = this->c.z * rhs.c.x - this->c.x * rhs.c.z;
+        result.c.z = this->c.x * rhs.c.y - this->c.y * rhs.c.x;
+        result.c.w = 0;
+        return result;
+    }
 
     // Matrix4 Implementation
     Matrix4 Matrix4::operator*(const Matrix4& rhs) {
@@ -155,6 +163,25 @@ namespace Math {
         return result;
     }
 
+    // Leverages the fact that the inverse of an orthogonal matrix is its transpose.
+    Matrix4 Matrix4::orthoInverse(bool& success) {
+        Matrix4 result{0};
+
+        // The top-left 3x3 submatrix is the transpose of the original.
+        for (int r = 0; r < 3; r++)
+            for (int c = 0; c < 3; c++)
+                result.m[r][c] = this->m[c][r];
+
+        result.columns.w = {
+            -(this->columns.w.dot(this->columns.x)),
+            -(this->columns.w.dot(this->columns.y)),
+            -(this->columns.w.dot(this->columns.z)),
+            1.0f
+        };
+
+        return result;
+    }
+
     void Matrix4::print() {
         printf("Matrix4:\n");
         for (int r = 0; r < 4; r++)
@@ -170,6 +197,16 @@ namespace Math {
         result.m[2][2] = -(far + near) / (far - near);
         result.m[2][3] = -1.0f;
         result.m[3][2] = -(2.0f * far * near) / (far - near);
+        return result;
+    }
+
+    Matrix4 Matrix4::camera(Vector4& position, Vector4& forward, Vector4& up) {
+        Matrix4 result{0};
+        result.columns.x = up.cross(forward);
+        result.columns.y = up;
+        result.columns.z = forward;
+        result.columns.w = position;
+        result.columns.w.c.w = 1.0f;
         return result;
     }
 

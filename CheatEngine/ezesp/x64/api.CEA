@@ -1,5 +1,4 @@
-// Wrappers for APIs from Ezesp.dll
-// Calling convention:
+// Wrappers for APIs from Ezesp.dll with __stdcall calling convention.
 //     - Arguments are pushed onto the stack in reverse order.
 //     - Callee cleans up the stack.
 
@@ -22,7 +21,6 @@ label(_updateObject)
 _updateObject:
     include(ezesp/x64/saveState)
 
-    // Call using Windows x64 calling convention
     sub rsp, 28
     mov rcx, [rbp+0x08]
     mov rdx, [rbp+0x10]
@@ -32,3 +30,49 @@ _updateObject:
 
     include(ezesp/x64/restoreState)
     ret 0x18
+
+// setCameraPosPtr(void* pointer, unsigned int stride, int scale)
+label(_setCameraPosPtr)
+_setCameraPosPtr:
+    include(ezesp/x64/saveState)
+
+    sub rsp, 28
+    mov rcx, [rbp+0x08]
+    mov rdx, [rbp+0x10]
+    mov r8, [rbp+0x18]
+    call setCameraPosPtr
+    add rsp, 28
+
+    include(ezesp/x64/restoreState)
+    ret 0x18
+
+// setCameraForwardPtr(void* pointer, unsigned int stride, int scale)
+label(_setCameraForwardPtr)
+_setCameraForwardPtr:
+    include(ezesp/x64/saveState)
+
+    sub rsp, 28
+    mov rcx, [rbp+0x08]
+    mov rdx, [rbp+0x10]
+    mov r8, [rbp+0x18]
+    call setCameraForwardPtr
+    add rsp, 28
+
+    include(ezesp/x64/restoreState)
+    ret 0x18
+
+// setCameraUpPtr(void* pointer, unsigned int stride, int scale)
+label(_setCameraUpPtr)
+_setCameraUpPtr:
+    include(ezesp/x64/saveState)
+
+    sub rsp, 28
+    mov rcx, [rbp+0x08]
+    mov rdx, [rbp+0x10]
+    mov r8, [rbp+0x18]
+    call setCameraUpPtr
+    add rsp, 28
+
+    include(ezesp/x64/restoreState)
+    ret 0x18
+

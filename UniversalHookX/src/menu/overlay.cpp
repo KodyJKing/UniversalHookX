@@ -21,14 +21,38 @@ union ViewValue {
     Matrix4 matrix;
 };
 
+struct VecPointer {
+    void* pointer;
+    unsigned int stride;
+    int scale;
+
+    bool getVector(Vector4& result) {
+        float* data = (float*)pointer;
+
+        float buffer[16];
+        if (!Utils::safeReadArray((float*)pointer, buffer, 16)) {
+            LOG("Failed to read vector from pointer\n");
+            return false;
+        }
+
+        for (int i = 0; i < 4; i++)
+            result.v[i] = buffer[i * stride] * scale;
+
+        return true;
+    }
+};
+
 struct View {
-    ViewStorage storage = ViewStorage::VSValue;
     ViewType type = ViewType::VTMatrix;
     MatrixOrder order = MatrixOrder::VTColumnMajor;
     MatrixType matrixType = MatrixType::MTCamera;
 
     ViewValue data;
     ViewValue* pointer = nullptr;
+
+    VecPointer position;
+    VecPointer forward;
+    VecPointer up;
 
     float fov = 1.223f;
 
@@ -40,36 +64,19 @@ struct View {
         Matrix4 result{0};
         success = true;
 
-        if (storage == ViewStorage::VSPointer) {
-            //  result = pointer->matrix;
-             success = Utils::safeDeref(&pointer->matrix, result);
-             if (!success) {
-                 LOG("Failed to read matrix from pointer\n");
-                 return result;
-             }
-        } else {
-            result = data.matrix;
+        Vector4 forwardVec{0};
+        Vector4 upVec{0};
+        Vector4 positionVec{0};
+
+        if (!forward.getVector(forwardVec) || !up.getVector(upVec) || !position.getVector(positionVec)) {
+            LOG("Failed to read vectors\n");
+            success = false;
+            return result;
         }
-            
-        if (order == MatrixOrder::VTRowMajor)
-            result = result.transpose();
 
-        switch (matrixType) {
-            case MatrixType::MTCamera:
-                // Convert to view matrix
-                result = result.inverse(success);
-
-            // case MatrixType::MTView:
-            //     // Convert to view-projection
-            //     result = result * Matrix4::perspective(getFov(), aspect, 0.1f, 1000);
-
-            // case MatrixType::MTViewProjection:
-            //     // Convert to screen space
-            //     result = result * Matrix4::scale(1, -1, 1) * Matrix4::translate(1, 1, 0) * Matrix4::scale(0.5f, 0.5f, 1);
-
-            default:
-                break;
-        }
+        result = Matrix4::camera(positionVec, forwardVec, upVec);
+        // Convert from camera to view matrix
+        result = result.orthoInverse(success);
         
         return result;
     }
@@ -121,29 +128,48 @@ void clearStaleObjects() {
 
 extern "C" __declspec(dllexport) void __stdcall setCameraMatrix(void* pointer, MatrixOrder order) {
     const std::lock_guard<std::mutex> lock(apiMutex);
+
+    // LOG("Args: %p, %d\n", pointer, order);
     
-    view.storage = ViewStorage::VSPointer;
     view.type = ViewType::VTMatrix;
     view.order = order;
     view.matrixType = MatrixType::MTCamera;
     view.pointer = (ViewValue*)pointer;
-
-    // LOG("Args: %p, %d\n", pointer, order);
 }
 
 extern "C" __declspec(dllexport) void __stdcall updateObject(uint_ptr id, float* position, uint32_t timeout) {
     const std::lock_guard<std::mutex> lock(apiMutex);
     
+    // LOG("Args: %p, %p, %d\n", (void*)id, (void*)position, timeout);
+    // LOG("Args: %p, %f, %f, %f, %d\n", (void*)id, position[0], position[1], position[2], timeout);
+
     Object object;
     object.id = id;
-    object.position.c.x = position[0];
-    object.position.c.y = position[1];
-    object.position.c.z = position[2];
+
+    Vector4* positionPtr = (Vector4*)position;
+    object.position = *positionPtr;
     object.position.c.w = 1;
+
     object.timeout = timeout + GetTickCount();
     objects[id] = object;
+}
 
-    // LOG("Args: %p, %f, %f, %f, %d\n", (void*)id, position[0], position[1], position[2], timeout);
+extern "C" __declspec(dllexport) void __stdcall setCameraPosPtr(void* pointer, unsigned int stride, int scale) {
+    const std::lock_guard<std::mutex> lock(apiMutex);
+    // LOG("Args: %p, %d, %d\n", pointer, stride, scale);
+    view.position = { pointer, stride, scale };
+}
+
+extern "C" __declspec(dllexport) void __stdcall setCameraForwardPtr(void* pointer, unsigned int stride, int scale) {
+    const std::lock_guard<std::mutex> lock(apiMutex);
+    // LOG("Args: %p, %d, %d\n", pointer, stride, scale);
+    view.forward = { pointer, stride, scale };
+}
+
+extern "C" __declspec(dllexport) void __stdcall setCameraUpPtr(void* pointer, unsigned int stride, int scale) {
+    const std::lock_guard<std::mutex> lock(apiMutex);
+    // LOG("Args: %p, %d, %d\n", pointer, stride, scale);
+    view.up = { pointer, stride, scale };
 }
 
 ///////////////////////
@@ -203,6 +229,23 @@ namespace Overlay {
             ImGui::Text("Failed to get matrix");
             ImGui::PopStyleColor();
             return;
+        }
+
+        Vector4 vec{0};
+        if (view.forward.getVector(vec)) {
+            char buf[255];
+            snprintf(buf, sizeof(buf), "Forward: %f, %f, %f", vec.c.x, vec.c.y, vec.c.z);
+            ImGui::Text(buf);
+        }
+        if (view.up.getVector(vec)) {
+            char buf[255];
+            snprintf(buf, sizeof(buf), "Up: %f, %f, %f", vec.c.x, vec.c.y, vec.c.z);
+            ImGui::Text(buf);
+        }
+        if (view.position.getVector(vec)) {
+            char buf[255];
+            snprintf(buf, sizeof(buf), "Position: %f, %f, %f", vec.c.x, vec.c.y, vec.c.z);
+            ImGui::Text(buf);
         }
 
         // static int callCount = 0;

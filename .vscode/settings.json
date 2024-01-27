@@ -6,7 +6,8 @@
         "mutex": "cpp",
         "map": "cpp",
         "xtree": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "type_traits": "cpp"
     },
     "Lua.diagnostics.disable": [
         "lowercase-global",

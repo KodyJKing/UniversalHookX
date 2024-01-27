@@ -40,6 +40,22 @@ namespace Utils {
 		return success;
 	}
 
+	// Safe read array
+	template <typename T>
+	BOOL safeReadArray(T* ptr, T* result, size_t size) {
+		if (!ptr)
+			return false;
+		if (!result)
+			return false;
+		DWORD pid = GetCurrentProcessId();
+		HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+		if (!hProcess)
+			return false;
+		BOOL success = ReadProcessMemory(hProcess, ptr, result, size * sizeof(T), nullptr);
+		CloseHandle(hProcess);
+		return success;
+	}
+
 }
 
 namespace U = Utils;
