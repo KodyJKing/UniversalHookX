@@ -2,15 +2,10 @@ namespace Math {
 
     class Vector4 {
     public:
-        union {
-            float v[4];
-            struct {
-                float x;
-                float y;
-                float z;
-                float w;
-            } c;
-        };
+        float x;
+        float y;
+        float z;
+        float w;
         
         Vector4& operator+=(const Vector4& rhs);
         Vector4& operator-=(const Vector4& rhs);

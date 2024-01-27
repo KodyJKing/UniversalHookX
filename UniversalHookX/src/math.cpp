@@ -6,17 +6,17 @@ namespace Math {
 
     // Vector4 Implementation
     Vector4& Vector4::operator+=(const Vector4& rhs) {
-        this->c.x += rhs.c.x;
-        this->c.y += rhs.c.y;
-        this->c.z += rhs.c.z;
-        this->c.w += rhs.c.w;
+        this->x += rhs.x;
+        this->y += rhs.y;
+        this->z += rhs.z;
+        this->w += rhs.w;
         return *this;
     }
     Vector4& Vector4::operator-=(const Vector4& rhs) {
-        this->c.x -= rhs.c.x;
-        this->c.y -= rhs.c.y;
-        this->c.z -= rhs.c.z;
-        this->c.w -= rhs.c.w;
+        this->x -= rhs.x;
+        this->y -= rhs.y;
+        this->z -= rhs.z;
+        this->w -= rhs.w;
         return *this;
     }
     Vector4 Vector4::operator+(const Vector4& rhs) {
@@ -31,33 +31,33 @@ namespace Math {
     }
     Vector4 Vector4::operator*(const float scalar) {
         Vector4 result = *this;
-        result.c.x *= scalar;
-        result.c.y *= scalar;
-        result.c.z *= scalar;
-        result.c.w *= scalar;
+        result.x *= scalar;
+        result.y *= scalar;
+        result.z *= scalar;
+        result.w *= scalar;
         return result;
     }
     Vector4 Vector4::operator/(const float scalar) {
         float inv = 1.0f / scalar;
         Vector4 result = *this;
-        result.c.x *= inv;
-        result.c.y *= inv;
-        result.c.z *= inv;
-        result.c.w *= inv;
+        result.x *= inv;
+        result.y *= inv;
+        result.z *= inv;
+        result.w *= inv;
         return result;
     }
     float Vector4::dot(const Vector4& rhs) {
-        return this->c.x * rhs.c.x + this->c.y * rhs.c.y + this->c.z * rhs.c.z + this->c.w * rhs.c.w;
+        return this->x * rhs.x + this->y * rhs.y + this->z * rhs.z + this->w * rhs.w;
     }
     float Vector4::length() {
         return sqrtf(this->dot(*this));
     }
     Vector4 Vector4::cross(const Vector4& rhs) {
         Vector4 result;
-        result.c.x = this->c.y * rhs.c.z - this->c.z * rhs.c.y;
-        result.c.y = this->c.z * rhs.c.x - this->c.x * rhs.c.z;
-        result.c.z = this->c.x * rhs.c.y - this->c.y * rhs.c.x;
-        result.c.w = 0;
+        result.x = this->y * rhs.z - this->z * rhs.y;
+        result.y = this->z * rhs.x - this->x * rhs.z;
+        result.z = this->x * rhs.y - this->y * rhs.x;
+        result.w = 0;
         return result;
     }
 
@@ -77,10 +77,12 @@ namespace Math {
 
     Vector4 Matrix4::operator*(const Vector4& rhs) {
         Vector4 result;
+        float* fResult = (float*)&result;
+        float* fRhs = (float*)&rhs;
         for (int r = 0; r < 4; r++) {
-            result.v[r] = 0;
+            fResult[r] = 0;
             for (int i = 0; i < 4; i++) {
-                result.v[r] += this->m[i][r] * rhs.v[i];
+                fResult[r] += this->m[i][r] * fRhs[i];
             }
         }
         return result;
@@ -206,7 +208,7 @@ namespace Math {
         result.columns.y = up;
         result.columns.z = forward;
         result.columns.w = position;
-        result.columns.w.c.w = 1.0f;
+        result.columns.w.w = 1.0f;
         return result;
     }
 

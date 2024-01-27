@@ -31,8 +31,9 @@ struct VecPointer {
             return false;
         }
 
+        float* fResult = (float*)&result;
         for (int i = 0; i < 4; i++)
-            result.v[i] = buffer[i * stride] * scale;
+            fResult[i] = buffer[i * stride] * scale;
 
         return true;
     }
@@ -83,13 +84,13 @@ struct View {
         Vector4 result = mat * point;
 
         float aspect = width / height;
-        float scale = 1.0f / result.c.z / tanf(fov / 2);
+        float scale = 1.0f / result.z / tanf(fov / 2);
         
-        result.c.x *= scale;
-        result.c.y *= scale * aspect;
+        result.x *= scale;
+        result.y *= scale * aspect;
 
-        result.c.x = (result.c.x + 1) * width / 2;
-        result.c.y = (1 - result.c.y) * height / 2;
+        result.x = (result.x + 1) * width / 2;
+        result.y = (1 - result.y) * height / 2;
         return result;
     }
 
@@ -135,7 +136,7 @@ extern "C" __declspec(dllexport) void __stdcall updateObject(uint_ptr id, float*
 
     Vector4* positionPtr = (Vector4*)position;
     object.position = *positionPtr;
-    object.position.c.w = 1;
+    object.position.w = 1;
 
     object.timeout = timeout + GetTickCount();
     objects[id] = object;
@@ -229,17 +230,17 @@ namespace Overlay {
         Vector4 vec{0};
         if (view.forward.getVector(vec)) {
             char buf[255];
-            snprintf(buf, sizeof(buf), "Forward: %f, %f, %f", vec.c.x, vec.c.y, vec.c.z);
+            snprintf(buf, sizeof(buf), "Forward: %f, %f, %f", vec.x, vec.y, vec.z);
             ImGui::Text(buf);
         }
         if (view.up.getVector(vec)) {
             char buf[255];
-            snprintf(buf, sizeof(buf), "Up: %f, %f, %f", vec.c.x, vec.c.y, vec.c.z);
+            snprintf(buf, sizeof(buf), "Up: %f, %f, %f", vec.x, vec.y, vec.z);
             ImGui::Text(buf);
         }
         if (view.position.getVector(vec)) {
             char buf[255];
-            snprintf(buf, sizeof(buf), "Position: %f, %f, %f", vec.c.x, vec.c.y, vec.c.z);
+            snprintf(buf, sizeof(buf), "Position: %f, %f, %f", vec.x, vec.y, vec.z);
             ImGui::Text(buf);
         }
 
@@ -264,8 +265,8 @@ namespace Overlay {
             );
             object.second.screenPosition = pos;
 
-            float dx = pos.c.x - targetPos.x;
-            float dy = pos.c.y - targetPos.y;
+            float dx = pos.x - targetPos.x;
+            float dy = pos.y - targetPos.y;
             float dist = dx * dx + dy * dy;
             
             if (dist < nearestDist) {
@@ -283,14 +284,14 @@ namespace Overlay {
 
             Vector4 position = object.second.screenPosition;
 
-            if (position.c.z < 0)
+            if (position.z < 0)
                 continue;
 
             auto color = selected ? COL_HIGHLIGHT : COL_NEUTRAL;
             auto textColor = selected ? COL_HIGHLIGHT : COL_WHITE;
             auto radius = selected ? 7.0f : 5.0f;
 
-            ImVec2 screenPos = ImVec2(position.c.x, position.c.y);
+            ImVec2 screenPos = ImVec2(position.x, position.y);
             drawList->AddCircleFilled(screenPos, radius, color);
 
             char displayText[255];
