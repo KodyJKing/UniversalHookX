@@ -5,7 +5,7 @@
 // updateObject(uint_ptr id, float* position, uint32_t timeout)
 label(_updateObject)
 _updateObject:
-    include(ezesp/x64/saveState)
+    include(ezesp/x64/prolog)
 
     sub rsp, 28
     mov rcx, [rbp+0x08]
@@ -14,26 +14,26 @@ _updateObject:
     call updateObject
     add rsp, 28
 
-    include(ezesp/x64/restoreState)
+    include(ezesp/x64/epilog)
     ret 0x18
 
 // setFovPtr(float* pointer)
 label(_setFovPtr)
 _setFovPtr:
-    include(ezesp/x64/saveState)
+    include(ezesp/x64/prolog)
 
-    sub rsp, 20
+    sub rsp, 28
     mov rcx, [rbp+0x08]
     call setFovPtr
-    add rsp, 20
+    add rsp, 28
 
-    include(ezesp/x64/restoreState)
+    include(ezesp/x64/epilog)
     ret 0x08
 
 // setCameraPosPtr(void* pointer, unsigned int stride, int scale)
 label(_setCameraPosPtr)
 _setCameraPosPtr:
-    include(ezesp/x64/saveState)
+    include(ezesp/x64/prolog)
 
     sub rsp, 28
     mov rcx, [rbp+0x08]
@@ -42,13 +42,13 @@ _setCameraPosPtr:
     call setCameraPosPtr
     add rsp, 28
 
-    include(ezesp/x64/restoreState)
+    include(ezesp/x64/epilog)
     ret 0x18
 
 // setCameraForwardPtr(void* pointer, unsigned int stride, int scale)
 label(_setCameraForwardPtr)
 _setCameraForwardPtr:
-    include(ezesp/x64/saveState)
+    include(ezesp/x64/prolog)
 
     sub rsp, 28
     mov rcx, [rbp+0x08]
@@ -57,13 +57,13 @@ _setCameraForwardPtr:
     call setCameraForwardPtr
     add rsp, 28
 
-    include(ezesp/x64/restoreState)
+    include(ezesp/x64/epilog)
     ret 0x18
 
 // setCameraUpPtr(void* pointer, unsigned int stride, int scale)
 label(_setCameraUpPtr)
 _setCameraUpPtr:
-    include(ezesp/x64/saveState)
+    include(ezesp/x64/prolog)
 
     sub rsp, 28
     mov rcx, [rbp+0x08]
@@ -72,6 +72,6 @@ _setCameraUpPtr:
     call setCameraUpPtr
     add rsp, 28
 
-    include(ezesp/x64/restoreState)
+    include(ezesp/x64/epilog)
     ret 0x18
 

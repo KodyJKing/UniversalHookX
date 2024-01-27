@@ -10,8 +10,7 @@ movdqu xmm7, [esp+70]
 add esp, 80
 
 // Restore esp
-pop eax
-mov esp, eax
+mov esp, ebx
 
 // Restore registers and flags
 popfd

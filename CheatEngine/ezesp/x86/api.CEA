@@ -1,60 +1,57 @@
 // Wrappers for APIs from Ezesp.dll. Ensures that registers are preserved across calls.
 //     - Arguments are pushed onto the stack in reverse order.
 //     - Callee cleans up the stack.
+//     - No registers are clobered.
+
+// updateObject(uint_ptr id, float* position, uint32_t timeout)
+label(_updateObject)
+_updateObject:
+    include(ezesp/x86/prolog)
+    push [ebp+0C]
+    push [ebp+08]
+    push [ebp+04]
+    call updateObject
+    include(ezesp/x86/epilog)
+    ret 0C
 
 // setFovPtr(float* pointer)
 label(_setFovPtr)
 _setFovPtr:
-
-    // Save esp to ebp
-    push ebp
-    lea ebp, [esp+04]
-
-    // Save registers and flags
-    pushad
-    pushfd
-
-    // 16-byte align esp
-    mov eax, esp
-    and esp, 0xFFFFFFF0
-    push eax
-
-    // // Save xmm0-7
-    // // Todo: Align stack and use movdqa instead.
-    sub esp, 80
-    movdqu [esp], xmm0
-    movdqu [esp+10], xmm1
-    movdqu [esp+20], xmm2
-    movdqu [esp+30], xmm3
-    movdqu [esp+40], xmm4
-    movdqu [esp+50], xmm5
-    movdqu [esp+60], xmm6
-    movdqu [esp+70], xmm7
-
-    // Call function
+    include(ezesp/x86/prolog)
     push [ebp+04]
     call setFovPtr
-
-    // // Restore xmm0-7
-    movdqu xmm0, [esp]
-    movdqu xmm1, [esp+10]
-    movdqu xmm2, [esp+20]
-    movdqu xmm3, [esp+30]
-    movdqu xmm4, [esp+40]
-    movdqu xmm5, [esp+50]
-    movdqu xmm6, [esp+60]
-    movdqu xmm7, [esp+70]
-    add esp, 80
-
-    // Restore esp
-    pop eax
-    mov esp, eax
-
-    // Restore registers and flags
-    popfd
-    popad
-
-    // Restore ebp
-    pop ebp
-
+    include(ezesp/x86/epilog)
     ret 04
+
+// setCameraPosPtr(void* pointer, unsigned int stride, int scale)
+label(_setCameraPosPtr)
+_setCameraPosPtr:
+    include(ezesp/x86/prolog)
+    push [ebp+0C]
+    push [ebp+08]
+    push [ebp+04]
+    call setCameraPosPtr
+    include(ezesp/x86/epilog)
+    ret 0C
+
+// setCameraForwardPtr(void* pointer, unsigned int stride, int scale)
+label(_setCameraForwardPtr)
+_setCameraForwardPtr:
+    include(ezesp/x86/prolog)
+    push [rbp+0C]
+    push [rbp+08]
+    push [rbp+04]
+    call setCameraForwardPtr
+    include(ezesp/x86/epilog)
+    ret 0C
+
+// setCameraUpPtr(void* pointer, unsigned int stride, int scale)
+label(_setCameraUpPtr)
+_setCameraUpPtr:
+    include(ezesp/x86/prolog)
+    push [rbp+0C]
+    push [rbp+08]
+    push [rbp+04]
+    call setCameraUpPtr
+    include(ezesp/x86/epilog)
+    ret 0C

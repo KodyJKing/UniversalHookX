@@ -128,18 +128,18 @@ void clearStaleObjects() {
 extern "C" __declspec(dllexport) void __stdcall updateObject(uint_ptr id, float* position, uint32_t timeout) {
     const std::lock_guard<std::mutex> lock(apiMutex);
     
-    // LOG("Args: %p, %p, %d\n", (void*)id, (void*)position, timeout);
+    LOG("Args: %p, %p, %d\n", (void*)id, (void*)position, timeout);
     // LOG("Args: %p, %f, %f, %f, %d\n", (void*)id, position[0], position[1], position[2], timeout);
 
-    Object object;
-    object.id = id;
+    // Object object;
+    // object.id = id;
 
-    Vector4* positionPtr = (Vector4*)position;
-    object.position = *positionPtr;
-    object.position.w = 1;
+    // Vector4* positionPtr = (Vector4*)position;
+    // object.position = *positionPtr;
+    // object.position.w = 1;
 
-    object.timeout = timeout + GetTickCount();
-    objects[id] = object;
+    // object.timeout = timeout + GetTickCount();
+    // objects[id] = object;
 }
 
 extern "C" __declspec(dllexport) void __stdcall setFovPtr(float* pointer) {
@@ -216,6 +216,22 @@ namespace Overlay {
             ImGui::Checkbox("Hide unselected", &uiSettings.hideUnselected);
         }
 
+        Vector4 vec{0};
+        char buf[255];
+        if (view.forward.getVector(vec)) {
+            snprintf(buf, sizeof(buf), "Forward: %f, %f, %f", vec.x, vec.y, vec.z);
+            ImGui::Text(buf);
+        }
+        if (view.up.getVector(vec)) {
+            snprintf(buf, sizeof(buf), "Up: %f, %f, %f", vec.x, vec.y, vec.z);
+            ImGui::Text(buf);
+        }
+        if (view.position.getVector(vec)) {
+            snprintf(buf, sizeof(buf), "Position: %f, %f, %f", vec.x, vec.y, vec.z);
+            ImGui::Text(buf);
+        }
+         
+
         float aspect = winSize.x / winSize.y;
 
         bool getMatSuccess = false;
@@ -225,23 +241,6 @@ namespace Overlay {
             ImGui::Text("Failed to get matrix");
             ImGui::PopStyleColor();
             return;
-        }
-
-        Vector4 vec{0};
-        if (view.forward.getVector(vec)) {
-            char buf[255];
-            snprintf(buf, sizeof(buf), "Forward: %f, %f, %f", vec.x, vec.y, vec.z);
-            ImGui::Text(buf);
-        }
-        if (view.up.getVector(vec)) {
-            char buf[255];
-            snprintf(buf, sizeof(buf), "Up: %f, %f, %f", vec.x, vec.y, vec.z);
-            ImGui::Text(buf);
-        }
-        if (view.position.getVector(vec)) {
-            char buf[255];
-            snprintf(buf, sizeof(buf), "Position: %f, %f, %f", vec.x, vec.y, vec.z);
-            ImGui::Text(buf);
         }
 
         // static int callCount = 0;

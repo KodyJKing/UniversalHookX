@@ -7,9 +7,8 @@ pushad
 pushfd
 
 // 16-byte align esp
-mov eax, esp
+mov ebx, esp
 and esp, 0xFFFFFFF0
-push eax
 
 // // Save xmm0-7
 // // Todo: Align stack and use movdqa instead.
