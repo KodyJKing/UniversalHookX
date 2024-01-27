@@ -39,6 +39,7 @@ static std::add_pointer_t<HRESULT WINAPI(IDirectInputDevice8* device, DWORD cbDa
 HRESULT WINAPI hkGetDeviceState_mouse(IDirectInputDevice8* device, DWORD cbData, LPVOID lpvData) {
 	//LOG("[+] Hello from mouse hook!\n");
     if (Menu::bShowMenu) {
+		memset(lpvData, 0, cbData);
 		return S_OK;
     } else {
 		return oGetDeviceState_mouse(device, cbData, lpvData);
