@@ -1,0 +1,34 @@
+// Wrappers for APIs from Ezesp.dll
+// Calling convention:
+//     - Arguments are pushed onto the stack in reverse order.
+//     - Callee cleans up the stack.
+
+// setCameraMatrix(void* pointer, MatrixOrder order)
+label(_setCameraMatrix)
+_setCameraMatrix:
+    include(ezesp/x64/saveState)
+
+    sub rsp, 28
+    mov rcx, [rbp+0x08]
+    mov rdx, [rbp+0x10]
+    call setCameraMatrix
+    add rsp, 28
+
+    include(ezesp/x64/restoreState)
+    ret 0x10
+
+// updateObject(uint_ptr id, float* position, uint32_t timeout)
+label(_updateObject)
+_updateObject:
+    include(ezesp/x64/saveState)
+
+    // Call using Windows x64 calling convention
+    sub rsp, 28
+    mov rcx, [rbp+0x08]
+    mov rdx, [rbp+0x10]
+    mov r8, [rbp+0x18]
+    call updateObject
+    add rsp, 28
+
+    include(ezesp/x64/restoreState)
+    ret 0x18
