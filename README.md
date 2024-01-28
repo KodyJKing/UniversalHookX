@@ -3,6 +3,48 @@ Ezesp is a library for creating esps and debug-overlays. The user only needs to 
 
 This is a fork of UniversalHookX, and supports DirectX 9-12, OpenGL and Vulkan.
 
+## Usage
+
+Inject the dll into the target process. Then, include API wrappers in your AA script. 
+
+`include(ezesp/x86/api)`
+or
+`include(ezesp/x64/api)`
+
+Then, call the APIs to specify the camera transform and the location of game objects.
+
+```ASM
+lea eax, [halo.exe+2AC5D8] // (fov)
+push eax                   // fov
+call _setFovPtr
+
+push 1                     // scale
+push 1                     // stride
+lea eax, [halo.exe+2AC5DC] // (forward)
+push eax                   // direction
+call _setCameraForwardPtr
+
+push 1                     // scale
+push 1                     // stride
+lea eax, [halo.exe+2AC5E8] // (up)
+push eax                   // direction
+call _setCameraUpPtr
+
+push 1                     // scale
+push 1                     // stride
+lea eax, [halo.exe+2AC668] // (pos)
+push eax                   // direction
+call _setCameraPosPtr
+```
+
+```ASM
+push #1000       // timeout
+lea ebx,[eax+5C] // position ptr
+push ebx
+push eax         // object id
+call _updateObject
+```
+
 ![Sample](/screenshot.png)
 
 # UniversalHookX ![C++](https://img.shields.io/badge/language-C%2B%2B-%23f34b7d.svg) ![Windows](https://img.shields.io/badge/platform-Windows-0078d7.svg)
