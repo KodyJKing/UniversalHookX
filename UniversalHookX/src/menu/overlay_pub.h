@@ -1,7 +1,12 @@
 #pragma once
 
 typedef unsigned int uint32_t;
-typedef unsigned long long uint_ptr;
+
+#if defined(_WIN64)
+    typedef unsigned long long uint_ptr;
+#else
+    typedef unsigned int uint_ptr;
+#endif
 
 extern "C" __declspec(dllexport) void __stdcall updateObject(uint_ptr id, float* position, uint32_t timeout);
 

@@ -581,26 +581,26 @@ code:
 
   push eax
 
-    lea eax, [halo.exe+2AC5D8] // Fov
-    push eax
+    lea eax, [halo.exe+2AC5D8] // (fov)
+    push eax                   // fov
     call _setFovPtr
 
-    push 1                     // Scale
-    push 1                     // Stride
-    lea eax, [halo.exe+2AC5DC] // Forward
-    push eax                   // Direction
+    push 1                     // scale
+    push 1                     // stride
+    lea eax, [halo.exe+2AC5DC] // (forward)
+    push eax                   // direction
     call _setCameraForwardPtr
 
-    push 1
-    push 1
-    lea eax, [halo.exe+2AC5E8] // Up
-    push eax
+    push 1                     // scale
+    push 1                     // stride
+    lea eax, [halo.exe+2AC5E8] // (up)
+    push eax                   // direction
     call _setCameraUpPtr
 
-    push 1
-    push 1
-    lea eax, [halo.exe+2AC668] // Pos
-    push eax
+    push 1                     // scale
+    push 1                     // stride
+    lea eax, [halo.exe+2AC668] // (pos)
+    push eax                   // direction
     call _setCameraPosPtr
 
   pop eax

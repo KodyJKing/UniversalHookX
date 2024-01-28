@@ -9,7 +9,7 @@ movdqu xmm6, [esp+60]
 movdqu xmm7, [esp+70]
 add esp, 80
 
-// Restore esp
+// Restore pre-alignment esp
 mov esp, ebx
 
 // Restore registers and flags

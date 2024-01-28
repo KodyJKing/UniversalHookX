@@ -27,7 +27,7 @@ struct VecPointer {
 
         float buffer[16];
         if (!Utils::safeReadArray((float*)pointer, buffer, 16)) {
-            LOG("Failed to read vector from pointer\n");
+            // LOG("Failed to read vector from pointer\n");
             return false;
         }
 
@@ -46,8 +46,14 @@ struct View {
 
     float* fovPtr = nullptr; 
     float fov = 1.223f;
+    bool verticalFov = false;
+    bool forceManualFov = false;
+
+    bool leftHanded = false;
 
     float getFov() {
+        if (forceManualFov)
+            return fov;
         if (fovPtr != nullptr) {
             float result;
             if ( Utils::safeDeref(fovPtr, result)) {
@@ -68,12 +74,12 @@ struct View {
         Vector4 positionVec{0};
 
         if (!forward.getVector(forwardVec) || !up.getVector(upVec) || !position.getVector(positionVec)) {
-            LOG("Failed to read camera vectors\n");
+            // LOG("Failed to read camera vectors\n");
             success = false;
             return result;
         }
 
-        result = Matrix4::camera(positionVec, forwardVec, upVec);
+        result = Matrix4::camera(positionVec, forwardVec, upVec, leftHanded);
         // Convert from camera to view matrix
         result = result.orthoInverse(success);
         
@@ -87,7 +93,12 @@ struct View {
         float scale = 1.0f / result.z / tanf(fov / 2);
         
         result.x *= scale;
-        result.y *= scale * aspect;
+        result.y *= scale; // * aspect;
+
+        if (verticalFov)
+            result.x /= aspect;
+        else
+            result.y *= aspect;
 
         result.x = (result.x + 1) * width / 2;
         result.y = (1 - result.y) * height / 2;
@@ -128,18 +139,18 @@ void clearStaleObjects() {
 extern "C" __declspec(dllexport) void __stdcall updateObject(uint_ptr id, float* position, uint32_t timeout) {
     const std::lock_guard<std::mutex> lock(apiMutex);
     
-    LOG("Args: %p, %p, %d\n", (void*)id, (void*)position, timeout);
+    // LOG("Args: %p, %p, %d\n", (void*)id, (void*)position, timeout);
     // LOG("Args: %p, %f, %f, %f, %d\n", (void*)id, position[0], position[1], position[2], timeout);
 
-    // Object object;
-    // object.id = id;
+    Object object;
+    object.id = id;
 
-    // Vector4* positionPtr = (Vector4*)position;
-    // object.position = *positionPtr;
-    // object.position.w = 1;
+    Vector4* positionPtr = (Vector4*)position;
+    object.position = *positionPtr;
+    object.position.w = 1;
 
-    // object.timeout = timeout + GetTickCount();
-    // objects[id] = object;
+    object.timeout = timeout + GetTickCount();
+    objects[id] = object;
 }
 
 extern "C" __declspec(dllexport) void __stdcall setFovPtr(float* pointer) {
@@ -203,33 +214,41 @@ namespace Overlay {
             // Transparent background
             drawList->AddRectFilled(ImVec2(0, 0), winSize, IM_COL32(0, 0, 0, 64));
 
-            // Fov slider
-            if (view.fovPtr == nullptr) {
-                float sliderWidth = 400.0f;
-                ImGui::SetNextItemWidth(sliderWidth);
-                ImGui::SetCursorPos(ImVec2((winSize.x - sliderWidth) / 2, 0.0f));
-                ImGui::SliderFloat("Fov", &view.fov, 0.1f, 3.14159265358979323846f);
+            ImGui::Begin("Settings");
+                if (ImGui::CollapsingHeader("Display")) {
+                    ImGui::Checkbox("Always show IDs", &uiSettings.alwaysShowIds);
+                    ImGui::Checkbox("Hide unselected", &uiSettings.hideUnselected);
+                }
+
+                if (ImGui::CollapsingHeader("Camera")) {
+                    ImGui::Checkbox("Vertical fov", &view.verticalFov);
+                    ImGui::Checkbox("Left-handed", &view.leftHanded);
+                    ImGui::SliderFloat("Fov", &view.fov, 0.1f, 3.14159265358979323846f);
+                    ImGui::Checkbox("Force manual fov", &view.forceManualFov);
+                }
+            ImGui::End();
+        }
+
+        ImGui::Begin("Camera");
+            Vector4 vec{0};
+            char buf[255];
+            if (view.forward.getVector(vec)) {
+                ImGui::Text("Forward");
+                snprintf(buf, sizeof(buf), "%f, %f, %f", vec.x, vec.y, vec.z);
+                ImGui::Text(buf);
             }
+            if (view.up.getVector(vec)) {
+                ImGui::Text("Up");
+                snprintf(buf, sizeof(buf), "%f, %f, %f", vec.x, vec.y, vec.z);
+                ImGui::Text(buf);
+            }
+            if (view.position.getVector(vec)) {
+                ImGui::Text("Position");
+                snprintf(buf, sizeof(buf), "%f, %f, %f", vec.x, vec.y, vec.z);
+                ImGui::Text(buf);
+            }
+        ImGui::End();
 
-            ImGui::SetCursorPos(ImVec2(10.0f, 20.0f));
-            ImGui::Checkbox("Always show IDs", &uiSettings.alwaysShowIds);
-            ImGui::Checkbox("Hide unselected", &uiSettings.hideUnselected);
-        }
-
-        Vector4 vec{0};
-        char buf[255];
-        if (view.forward.getVector(vec)) {
-            snprintf(buf, sizeof(buf), "Forward: %f, %f, %f", vec.x, vec.y, vec.z);
-            ImGui::Text(buf);
-        }
-        if (view.up.getVector(vec)) {
-            snprintf(buf, sizeof(buf), "Up: %f, %f, %f", vec.x, vec.y, vec.z);
-            ImGui::Text(buf);
-        }
-        if (view.position.getVector(vec)) {
-            snprintf(buf, sizeof(buf), "Position: %f, %f, %f", vec.x, vec.y, vec.z);
-            ImGui::Text(buf);
-        }
          
 
         float aspect = winSize.x / winSize.y;

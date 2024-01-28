@@ -203,9 +203,12 @@ namespace Math {
         return result;
     }
 
-    Matrix4 Matrix4::camera(Vector4& position, Vector4& forward, Vector4& up) {
+    Matrix4 Matrix4::camera(Vector4& position, Vector4& forward, Vector4& up, bool leftHanded) {
         Matrix4 result{0};
-        result.columns.x = up.cross(forward);
+        if (leftHanded)
+            result.columns.x = forward.cross(up);
+        else
+            result.columns.x = up.cross(forward);
         result.columns.y = up;
         result.columns.z = forward;
         result.columns.w = position;
