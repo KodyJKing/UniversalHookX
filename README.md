@@ -1,5 +1,5 @@
 # Ezesp
-Ezesp is a library for creating esps and debug-overlays. The user only needs to call a few APIs to specify the current camera transform and the location of game objects. Ezesp is easily callable from Cheat Engine AA scripts.
+Ezesp is a library for creating overlays to help reverse engineer games. The user only needs to call a few APIs to specify the current camera transform and the location of game objects. Ezesp is easily callable from Cheat Engine AA scripts.
 
 This is a fork of UniversalHookX, and supports DirectX 9-12, OpenGL and Vulkan.
 
